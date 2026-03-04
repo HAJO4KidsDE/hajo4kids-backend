@@ -82,6 +82,7 @@ type Kategorie struct {
 	ID          uint           `json:"id" gorm:"primaryKey"`
 	Name        string         `json:"name" gorm:"size:255;not null"`
 	Beschreibung string        `json:"beschreibung,omitempty" gorm:"type:text"`
+	Bild        string         `json:"bild,omitempty" gorm:"size:500"` // Fallback image for ziele without images
 	SortOrder   int            `json:"sort_order" gorm:"default:0"`
 	CreatedAt   time.Time      `json:"created"`
 	UpdatedAt   time.Time      `json:"updated"`
