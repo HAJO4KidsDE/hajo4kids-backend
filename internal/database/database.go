@@ -20,12 +20,8 @@ func Connect(cfg *config.Config) error {
 
 	gormConfig := &gorm.Config{}
 
-	// Enable logging in development
-	if cfg.Server.Host == "0.0.0.0" {
-		gormConfig.Logger = logger.Default.LogMode(logger.Info)
-	} else {
-		gormConfig.Logger = logger.Default.LogMode(logger.Silent)
-	}
+	// Always enable logging to see migration errors
+	gormConfig.Logger = logger.Default.LogMode(logger.Info)
 
 	switch cfg.Database.Driver {
 	case "postgres":
@@ -64,5 +60,11 @@ func Connect(cfg *config.Config) error {
 }
 
 func Migrate(models ...interface{}) error {
-	return DB.AutoMigrate(models...)
+	log.Println("Running database migrations...")
+	if err := DB.AutoMigrate(models...); err != nil {
+		log.Printf("Migration failed: %v", err)
+		return err
+	}
+	log.Println("Database migrations completed successfully")
+	return nil
 }
