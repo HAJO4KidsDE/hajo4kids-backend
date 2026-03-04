@@ -39,4 +39,7 @@ logs/
 
 # OS
 .DS_Store
-Thumbs.db
+Thumbs.dbdbs13023809.sql
+*.sql
+dbs13023809.sql
+*.sql
