@@ -120,16 +120,30 @@ func GetZiele(c *fiber.Ctx) error {
 	})
 }
 
-// GetZiel returns a single destination by ID
+// GetZiel returns a single destination by ID or slug
 func GetZiel(c *fiber.Ctx) error {
 	id := c.Params("id")
 
 	var ziel models.Ziel
-	if err := database.DB.Preload("Kategorien").Preload("Bilder").Preload("Ratings").
-		Preload("Veranstaltungen").
-		Preload("Marketer").
-		First(&ziel, id).Error; err != nil {
-		return response.NotFound(c, "Ziel not found")
+	
+	// Try to parse as numeric ID first
+	if zielID, err := strconv.ParseUint(id, 10, 32); err == nil {
+		// It's a numeric ID
+		if err := database.DB.Preload("Kategorien").Preload("Bilder").Preload("Ratings").
+			Preload("Veranstaltungen").
+			Preload("Marketer").
+			First(&ziel, zielID).Error; err != nil {
+			return response.NotFound(c, "Ziel not found")
+		}
+	} else {
+		// Not numeric, try as slugname
+		if err := database.DB.Where("slugname = ?", id).
+			Preload("Kategorien").Preload("Bilder").Preload("Ratings").
+			Preload("Veranstaltungen").
+			Preload("Marketer").
+			First(&ziel).Error; err != nil {
+			return response.NotFound(c, "Ziel not found")
+		}
 	}
 
 	user := middleware.GetUserFromContext(c)
