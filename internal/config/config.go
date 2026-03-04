@@ -60,7 +60,7 @@ func Load() *Config {
 			WriteTimeout: getEnvInt("SERVER_WRITE_TIMEOUT", 30),
 		},
 		Database: DatabaseConfig{
-			Driver:   getEnv("DB_DRIVER", "sqlite"),
+			Driver:   getEnv("DB_DRIVER", getEnv("DB_TYPE", "sqlite")),
 			Host:     getEnv("DB_HOST", "localhost"),
 			Port:     getEnv("DB_PORT", "5432"),
 			User:     getEnv("DB_USER", ""),

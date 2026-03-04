@@ -20,8 +20,13 @@ func Connect(cfg *config.Config) error {
 
 	gormConfig := &gorm.Config{}
 
-	// Always enable logging to see migration errors
-	gormConfig.Logger = logger.Default.LogMode(logger.Info)
+	// Enable verbose logging to debug migration issues
+	gormConfig.Logger = logger.New(
+		log.New(log.Writer(), "\r\n", log.LstdFlags),
+		logger.Config{
+			LogLevel: logger.Info,
+		},
+	)
 
 	switch cfg.Database.Driver {
 	case "postgres":
@@ -66,5 +71,14 @@ func Migrate(models ...interface{}) error {
 		return err
 	}
 	log.Println("Database migrations completed successfully")
+	
+	// Debug: List created tables
+	var tables []string
+	if DB.Raw("SHOW TABLES").Scan(&tables); len(tables) > 0 {
+		log.Printf("Created %d tables: %v", len(tables), tables)
+	} else {
+		log.Println("WARNING: No tables found after migration!")
+	}
+	
 	return nil
 }
