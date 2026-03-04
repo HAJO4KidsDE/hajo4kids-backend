@@ -162,6 +162,8 @@ func UploadBild(c *fiber.Ctx) error {
 	uploadType := c.FormValue("type", "DESTINATION")
 	targetID := c.FormValue("id")
 	alt := c.FormValue("alt")
+	autor := c.FormValue("autor")
+	beschreibung := c.FormValue("beschreibung")
 	isPrimary := c.FormValue("is_primary") == "true"
 
 	// Validate upload type
@@ -226,6 +228,8 @@ func UploadBild(c *fiber.Ctx) error {
 		Size:         file.Size,
 		Path:         relativePath,
 		Alt:          alt,
+		Autor:        autor,
+		Beschreibung: beschreibung,
 		IsPrimary:    isPrimary,
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
@@ -270,6 +274,8 @@ func UpdateBild(c *fiber.Ctx) error {
 	// Only allow updating certain fields
 	allowedFields := map[string]bool{
 		"alt":          true,
+		"autor":        true,
+		"beschreibung": true,
 		"is_primary":   true,
 	}
 
