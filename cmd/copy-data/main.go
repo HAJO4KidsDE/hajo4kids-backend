@@ -27,136 +27,31 @@ func main() {
 	defer db.Close()
 
 	log.Println("✅ Connected to database")
-	log.Println("\n📦 Copying data from _old tables to new GORM tables...")
+	log.Println("\n📦 Copying remaining data...")
 
-	// 1. Copy users
-	log.Println("\n=== Copying users ===")
+	// 1. Copy marketers_old -> vermarkters (correct columns)
+	log.Println("\n=== Copying vermarkters ===")
 	result, err := db.Exec(`
-		INSERT IGNORE INTO users (username, email, password_hash, role, first_name, active, created, updated)
-		SELECT username, email, password,
-			CASE WHEN role = '' OR role IS NULL THEN 'user' ELSE role END,
-			COALESCE(fullname, ''),
-			CASE WHEN state = 'ENABLED' THEN 1 ELSE 0 END,
-			COALESCE(created, NOW()),
-			COALESCE(updated, NOW())
-		FROM users_old
-	`)
-	if err != nil {
-		log.Printf("   ⚠️  Error: %v", err)
-	} else {
-		affected, _ := result.RowsAffected()
-		log.Printf("   ✅ Copied %d users", affected)
-	}
-
-	// 2. Copy kategorien
-	log.Println("\n=== Copying kategorien ===")
-	result, err = db.Exec(`
-		INSERT IGNORE INTO kategorien (id, name, beschreibung, sort_order, created, updated)
-		SELECT id, name, COALESCE(beschreibung, ''), 0, COALESCE(created, NOW()), COALESCE(updated, NOW())
-		FROM kategorien_old
-	`)
-	if err != nil {
-		log.Printf("   ⚠️  Error: %v", err)
-	} else {
-		affected, _ := result.RowsAffected()
-		log.Printf("   ✅ Copied %d kategorien", affected)
-	}
-
-	// 3. Copy ziele
-	log.Println("\n=== Copying ziele ===")
-	result, err = db.Exec(`
-		INSERT IGNORE INTO ziele (id, marketer_id, name, slugname, placeid, webseite, facebook, adresse, stadt, latitude, longitude, auszug, beschreibung, besucht, vorteile, status, oeffnungszeiten, telefonnummer, created, updated)
-		SELECT id, marketer, name, slugname, placeid, webseite, facebook, adresse, stadt, latitude, longitude, auszug, beschreibung, besucht, vorteile, status, oeffnungszeiten, telefonnummer, COALESCE(created, NOW()), COALESCE(updated, NOW())
-		FROM ziele_old
-	`)
-	if err != nil {
-		log.Printf("   ⚠️  Error: %v", err)
-	} else {
-		affected, _ := result.RowsAffected()
-		log.Printf("   ✅ Copied %d ziele", affected)
-	}
-
-	// 4. Copy bilder
-	log.Println("\n=== Copying bilder ===")
-	result, err = db.Exec(`
-		INSERT IGNORE INTO bilder (id, filename, original_name, alt, path, created, updated)
-		SELECT id, name, name, beschreibung, name, COALESCE(zeitstempel, NOW()), COALESCE(updated, NOW())
-		FROM bilder_old
-	`)
-	if err != nil {
-		log.Printf("   ⚠️  Error: %v", err)
-	} else {
-		affected, _ := result.RowsAffected()
-		log.Printf("   ✅ Copied %d bilder", affected)
-	}
-
-	// 5. Copy vermarkter (from marketers_old)
-	log.Println("\n=== Copying vermarkter ===")
-	result, err = db.Exec(`
-		INSERT IGNORE INTO vermarkter (id, name, beschreibung, logo, webseite, email, telefon, created, updated)
-		SELECT id, name, COALESCE(beschreibung, ''), logo, webseite, email, telefon, NOW(), NOW()
+		INSERT IGNORE INTO vermarkters (id, name, logo, created_at, updated_at)
+		SELECT id, name, logo, COALESCE(created, NOW()), COALESCE(updated, NOW())
 		FROM marketers_old
 	`)
 	if err != nil {
 		log.Printf("   ⚠️  Error: %v", err)
 	} else {
 		affected, _ := result.RowsAffected()
-		log.Printf("   ✅ Copied %d vermarkter", affected)
+		log.Printf("   ✅ Copied %d vermarkters", affected)
 	}
 
-	// 6. Copy veranstaltungen (from events_old)
-	log.Println("\n=== Copying veranstaltungen ===")
+	// 2. Copy rating_old -> ratings (correct columns)
+	// Note: rating_old has 0 rows, but let's do it right
+	log.Println("\n=== Copying ratings ===")
 	result, err = db.Exec(`
-		INSERT IGNORE INTO veranstaltungen (id, ziel_id, title, beschreibung, start_datum, created, updated)
-		SELECT id, ziel_id, title, description,
-			COALESCE(STR_TO_DATE(CONCAT(date, ' ', COALESCE(begin, '00:00:00')), '%Y-%m-%d %H:%i:%s'), NOW()),
-			NOW(), NOW()
-		FROM events_old
-	`)
-	if err != nil {
-		log.Printf("   ⚠️  Error: %v", err)
-	} else {
-		affected, _ := result.RowsAffected()
-		log.Printf("   ✅ Copied %d veranstaltungen", affected)
-	}
-
-	// 7. Copy trips (from trip_old)
-	log.Println("\n=== Copying trips ===")
-	result, err = db.Exec(`
-		INSERT IGNORE INTO trips (id, user_id, title, beschreibung, is_public, created, updated)
-		SELECT t.id, u.id, t.title, t.description, CASE WHEN t.state = 'public' THEN 1 ELSE 0 END, t.date, t.date
-		FROM trip_old t
-		LEFT JOIN users u ON u.username = t.username
-	`)
-	if err != nil {
-		log.Printf("   ⚠️  Error: %v", err)
-	} else {
-		affected, _ := result.RowsAffected()
-		log.Printf("   ✅ Copied %d trips", affected)
-	}
-
-	// 8. Copy favoriten
-	log.Println("\n=== Copying favoriten ===")
-	result, err = db.Exec(`
-		INSERT IGNORE INTO favoriten (user_id, ziel_id, created)
-		SELECT u.id, f.ziel, NOW()
-		FROM favoriten_old f
-		LEFT JOIN users u ON u.username = f.username
-	`)
-	if err != nil {
-		log.Printf("   ⚠️  Error: %v", err)
-	} else {
-		affected, _ := result.RowsAffected()
-		log.Printf("   ✅ Copied %d favoriten", affected)
-	}
-
-	// 9. Copy rating
-	log.Println("\n=== Copying rating ===")
-	result, err = db.Exec(`
-		INSERT IGNORE INTO rating (ziel_id, user_id, score, comment, created, updated)
-		SELECT r.ziel_id, u.id, r.value, r.comment, COALESCE(r.created, NOW()), COALESCE(r.created, NOW())
+		INSERT IGNORE INTO ratings (ziel_id, user_id, score, comment, created_at, updated_at)
+		SELECT r.ziel_id, u.id, r.value, r.comment, COALESCE(r.timestamp, NOW()), COALESCE(r.timestamp, NOW())
 		FROM rating_old r
-		LEFT JOIN users u ON u.username = r.username
+		LEFT JOIN users_old u ON BINARY u.username = BINARY r.username
+		WHERE u.id IS NOT NULL
 	`)
 	if err != nil {
 		log.Printf("   ⚠️  Error: %v", err)
@@ -165,46 +60,40 @@ func main() {
 		log.Printf("   ✅ Copied %d ratings", affected)
 	}
 
-	// 10. Copy ziel_kategorien
-	log.Println("\n=== Copying ziel_kategorien ===")
+	// 3. Copy favoriten_old -> favorits (correct columns)
+	// Note: No users yet, so this won't copy
+	log.Println("\n=== Copying favorits ===")
 	result, err = db.Exec(`
-		INSERT IGNORE INTO ziel_kategorien (ziel_id, kategorie_id)
-		SELECT ziel_id, kategorie_id FROM ziele_kategorien_old
+		INSERT IGNORE INTO favorits (user_id, ziel_id, created_at)
+		SELECT u.id, f.ziel, NOW()
+		FROM favoriten_old f
+		LEFT JOIN users_old u ON BINARY u.username = BINARY f.username
+		WHERE u.id IS NOT NULL
 	`)
 	if err != nil {
 		log.Printf("   ⚠️  Error: %v", err)
 	} else {
 		affected, _ := result.RowsAffected()
-		log.Printf("   ✅ Copied %d ziel_kategorien", affected)
+		log.Printf("   ✅ Copied %d favorits", affected)
 	}
 
-	// 11. Copy ziel_bilder
-	log.Println("\n=== Copying ziel_bilder ===")
-	result, err = db.Exec(`
-		INSERT IGNORE INTO ziel_bilder (ziel_id, bild_id)
-		SELECT ziel_id, bild_id FROM ziele_bilder_old
-	`)
-	if err != nil {
-		log.Printf("   ⚠️  Error: %v", err)
-	} else {
-		affected, _ := result.RowsAffected()
-		log.Printf("   ✅ Copied %d ziel_bilder", affected)
-	}
-
-	// 12. Copy trip_ziele
-	log.Println("\n=== Copying trip_ziele ===")
-	result, err = db.Exec(`
-		INSERT IGNORE INTO trip_ziele (trip_id, ziel_id)
-		SELECT trip_id, ziel_id FROM ziele_trip_old
-	`)
-	if err != nil {
-		log.Printf("   ⚠️  Error: %v", err)
-	} else {
-		affected, _ := result.RowsAffected()
-		log.Printf("   ✅ Copied %d trip_ziele", affected)
-	}
-
+	// Final counts
 	log.Println("\n" + "==================================================")
-	log.Println("✅ Data migration completed!")
-	log.Println("==================================================")
+	log.Println("📊 Final row counts:")
+	tables := []struct {
+		name string
+	}{
+		{"users"}, {"kategories"}, {"ziels"}, {"bilds"},
+		{"vermarkters"}, {"veranstaltungs"}, {"trips"},
+		{"favorits"}, {"ratings"},
+		{"ziel_kategorien"}, {"ziel_bilder"}, {"trip_ziele"},
+	}
+
+	for _, t := range tables {
+		var count int
+		db.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM `%s`", t.name)).Scan(&count)
+		log.Printf("  %s: %d rows", t.name, count)
+	}
+
+	log.Println("\n✅ Done!")
 }
