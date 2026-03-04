@@ -16,6 +16,9 @@ func main() {
 	// Load config
 	cfg := config.Load()
 
+	// Initialize auth config
+	middleware.InitConfig(cfg)
+
 	// Connect to database
 	if err := database.Connect(cfg); err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)

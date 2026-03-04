@@ -19,13 +19,29 @@ var (
 	ErrTokenExpired = errors.New("token expired")
 )
 
-// DefaultConfig for JWT (should be overridden by actual config in production)
+// AppConfig holds the actual application config (set at startup)
+var AppConfig *config.Config
+
+// InitConfig must be called at startup to set the actual config
+func InitConfig(cfg *config.Config) {
+	AppConfig = cfg
+}
+
+// DefaultConfig for JWT (fallback, should never be used if InitConfig is called)
 var DefaultConfig = config.Config{
 	JWT: config.JWTConfig{
 		Secret: "change-me-in-production",
 		Expiry: 24,
 		Issuer: "hajo4kids.de",
 	},
+}
+
+// GetConfig returns the actual config if set, otherwise DefaultConfig
+func GetConfig() *config.Config {
+	if AppConfig != nil {
+		return AppConfig
+	}
+	return &DefaultConfig
 }
 
 type Claims struct {

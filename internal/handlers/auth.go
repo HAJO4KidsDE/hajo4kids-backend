@@ -74,8 +74,8 @@ func Register(c *fiber.Ctx) error {
 		return response.InternalError(c, "Failed to create user")
 	}
 
-	// Generate token - use DefaultConfig for now (TODO: pass config via dependency injection)
-	token, err := middleware.GenerateToken(&user, &middleware.DefaultConfig)
+	// Generate token
+	token, err := middleware.GenerateToken(&user, middleware.GetConfig())
 	if err != nil {
 		return response.InternalError(c, "Failed to generate token")
 	}
@@ -110,7 +110,7 @@ func Login(c *fiber.Ctx) error {
 		return response.Unauthorized(c, "Invalid credentials")
 	}
 
-	token, err := middleware.GenerateToken(&user, &middleware.DefaultConfig)
+	token, err := middleware.GenerateToken(&user, middleware.GetConfig())
 	if err != nil {
 		return response.InternalError(c, "Failed to generate token")
 	}
