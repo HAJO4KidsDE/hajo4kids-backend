@@ -30,12 +30,11 @@ COPY --from=builder /app/server /app/server
 # Create uploads directory
 RUN mkdir -p /app/uploads
 
-# Expose port
-EXPOSE 8080
+# Expose port (change if you use a different SERVER_PORT)
+EXPOSE 3000
 
 # Set environment defaults
 ENV GIN_MODE=release
-ENV PORT=8080
 
 # Run the binary
 CMD ["/app/server"]
