@@ -99,6 +99,8 @@ type Bild struct {
 	Path        string         `json:"path" gorm:"size:500"`
 	Thumbnail   string         `json:"thumbnail,omitempty" gorm:"size:500"`
 	Alt         string         `json:"alt,omitempty" gorm:"size:255"`
+	Autor       string         `json:"autor,omitempty" gorm:"size:255"`
+	Beschreibung string        `json:"beschreibung,omitempty" gorm:"type:text"`
 	IsPrimary   bool           `json:"is_primary" gorm:"default:false"`
 	CreatedAt   time.Time      `json:"created"`
 	UpdatedAt   time.Time      `json:"updated"`

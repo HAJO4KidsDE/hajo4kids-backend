@@ -52,6 +52,7 @@ func GetBilder(c *fiber.Ctx) error {
 	perPage, _ := strconv.Atoi(c.Query("per_page", "50"))
 	imageType := c.Query("type")
 	targetID := c.Query("target_id")
+	withAuthor := c.Query("with_author")
 
 	query := database.DB.Model(&models.Bild{})
 
@@ -61,6 +62,11 @@ func GetBilder(c *fiber.Ctx) error {
 	}
 	if targetID != "" {
 		// Filter by target via association
+	}
+
+	// Filter for images with author (for credits page)
+	if withAuthor == "true" {
+		query = query.Where("autor IS NOT NULL AND autor != ''")
 	}
 
 	var total int64
