@@ -12,6 +12,20 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// Helper: Check if user can edit trip (owner or admin)
+func canEditTrip(user *models.User, trip models.Trip) bool {
+	if user == nil {
+		return false
+	}
+	if user.ID == trip.UserID {
+		return true
+	}
+	if user.Role == "admin" {
+		return true
+	}
+	return false
+}
+
 // Kategorien
 func GetKategorien(c *fiber.Ctx) error {
 	var kategorien []models.Kategorie
@@ -370,7 +384,7 @@ func UpdateTrip(c *fiber.Ctx) error {
 	if err := database.DB.First(&trip, id).Error; err != nil {
 		return response.NotFound(c, "Trip not found")
 	}
-	if trip.UserID != user.ID {
+	if !canEditTrip(user, trip) {
 		return response.Forbidden(c, "Not your trip")
 	}
 	
@@ -394,10 +408,15 @@ func UpdateTrip(c *fiber.Ctx) error {
 
 func DeleteTrip(c *fiber.Ctx) error {
 	user := middleware.GetUserFromContext(c)
-	result := database.DB.Where("id = ? AND user_id = ?", c.Params("id"), user.ID).Delete(&models.Trip{})
-	if result.RowsAffected == 0 {
+	id := c.Params("id")
+	var trip models.Trip
+	if err := database.DB.First(&trip, id).Error; err != nil {
 		return response.NotFound(c, "Trip not found")
 	}
+	if !canEditTrip(user, trip) {
+		return response.Forbidden(c, "Not your trip")
+	}
+	database.DB.Delete(&trip)
 	return response.NoContent(c)
 }
 
@@ -407,7 +426,7 @@ func AddTripZiel(c *fiber.Ctx) error {
 	if err := database.DB.First(&trip, c.Params("id")).Error; err != nil {
 		return response.NotFound(c, "Trip not found")
 	}
-	if trip.UserID != user.ID {
+	if !canEditTrip(user, trip) {
 		return response.Forbidden(c, "Not your trip")
 	}
 	
@@ -426,7 +445,7 @@ func RemoveTripZiel(c *fiber.Ctx) error {
 	if err := database.DB.First(&trip, c.Params("id")).Error; err != nil {
 		return response.NotFound(c, "Trip not found")
 	}
-	if trip.UserID != user.ID {
+	if !canEditTrip(user, trip) {
 		return response.Forbidden(c, "Not your trip")
 	}
 	
