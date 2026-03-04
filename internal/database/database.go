@@ -5,8 +5,9 @@ import (
 	"log"
 
 	"github.com/HAJO4KidsDE/hajo4kids-backend/internal/config"
-	"gorm.io/driver/sqlite"
+	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -18,7 +19,7 @@ func Connect(cfg *config.Config) error {
 	var dsn string
 
 	gormConfig := &gorm.Config{}
-	
+
 	// Enable logging in development
 	if cfg.Server.Host == "0.0.0.0" {
 		gormConfig.Logger = logger.Default.LogMode(logger.Info)
@@ -37,6 +38,16 @@ func Connect(cfg *config.Config) error {
 			cfg.Database.SSLMode,
 		)
 		DB, err = gorm.Open(postgres.Open(dsn), gormConfig)
+	case "mysql", "mariadb":
+		// MySQL/MariaDB DSN format: user:password@tcp(host:port)/dbname?charset=utf8mb4&parseTime=True&loc=Local
+		dsn = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+			cfg.Database.User,
+			cfg.Database.Password,
+			cfg.Database.Host,
+			cfg.Database.Port,
+			cfg.Database.Name,
+		)
+		DB, err = gorm.Open(mysql.Open(dsn), gormConfig)
 	case "sqlite":
 		dsn = cfg.Database.Name
 		DB, err = gorm.Open(sqlite.Open(dsn), gormConfig)
