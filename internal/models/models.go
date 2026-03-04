@@ -6,6 +6,36 @@ import (
 	"gorm.io/gorm"
 )
 
+// ==================== USER ====================
+
+// User represents a user
+type User struct {
+	ID           uint           `json:"id" gorm:"primaryKey"`
+	Username     string         `json:"username" gorm:"size:50;uniqueIndex;not null"`
+	Email        string         `json:"email" gorm:"size:255;uniqueIndex;not null"`
+	PasswordHash string         `json:"-" gorm:"size:255;not null"`
+	Role         string         `json:"role" gorm:"size:20;default:'user'"` // guest, user, reporter, admin
+	FirstName    string         `json:"first_name,omitempty" gorm:"size:100"`
+	LastName     string         `json:"last_name,omitempty" gorm:"size:100"`
+	Active       bool           `json:"active" gorm:"default:true"`
+	CreatedAt    time.Time      `json:"created"`
+	UpdatedAt    time.Time      `json:"updated"`
+	DeletedAt    gorm.DeletedAt `json:"-" gorm:"index"`
+}
+
+// PasswordReset represents a password reset token
+type PasswordReset struct {
+	ID        uint      `json:"id" gorm:"primaryKey"`
+	UserID    uint      `json:"user_id" gorm:"not null;index"`
+	User      *User     `json:"-" gorm:"foreignKey:UserID"`
+	Token     string    `json:"token" gorm:"size:255;uniqueIndex;not null"`
+	ExpiresAt time.Time `json:"expires_at"`
+	Used      bool      `json:"used" gorm:"default:false"`
+	CreatedAt time.Time `json:"created"`
+}
+
+// ==================== ZIELE ====================
+
 // Ziel represents a destination/location
 type Ziel struct {
 	ID            uint           `json:"id" gorm:"primaryKey"`
@@ -26,7 +56,7 @@ type Ziel struct {
 	Vorteile      string         `json:"vorteile,omitempty" gorm:"type:text"`
 	Oeffnungszeiten string       `json:"oeffnungszeiten,omitempty" gorm:"type:text"`
 	Telefonnummer string         `json:"telefonnummer,omitempty" gorm:"size:50"`
-	Status        string         `json:"status" gorm:"size:20;default:'draft'"` // draft, published, archived
+	Status        string         `json:"status" gorm:"size:20;default:'DESIGN'"` // DESIGN, PUBLISHED, ARCHIVED
 	CreatedAt     time.Time      `json:"created"`
 	UpdatedAt     time.Time      `json:"updated"`
 	CreatedBy     *uint          `json:"createdby,omitempty"`
@@ -93,21 +123,6 @@ type Favorit struct {
 	UserID    uint      `json:"user_id" gorm:"not null;uniqueIndex:idx_user_ziel"`
 	ZielID    uint      `json:"ziel_id" gorm:"not null;uniqueIndex:idx_user_ziel"`
 	CreatedAt time.Time `json:"created"`
-}
-
-// User represents a user
-type User struct {
-	ID           uint           `json:"id" gorm:"primaryKey"`
-	Username     string         `json:"username" gorm:"size:50;uniqueIndex;not null"`
-	Email        string         `json:"email" gorm:"size:255;uniqueIndex;not null"`
-	PasswordHash string         `json:"-" gorm:"size:255;not null"`
-	Role         string         `json:"role" gorm:"size:20;default:'user'"` // guest, user, reporter, admin
-	FirstName    string         `json:"first_name,omitempty" gorm:"size:100"`
-	LastName     string         `json:"last_name,omitempty" gorm:"size:100"`
-	Active       bool           `json:"active" gorm:"default:true"`
-	CreatedAt    time.Time      `json:"created"`
-	UpdatedAt    time.Time      `json:"updated"`
-	DeletedAt    gorm.DeletedAt `json:"-" gorm:"index"`
 }
 
 // Vermarkter represents a marketer/organization
@@ -217,7 +232,7 @@ type ShopItem struct {
 	Lagerbestand  int            `json:"lagerbestand" gorm:"default:0"`
 	Verfuegbar    bool           `json:"verfuegbar" gorm:"default:true"`
 	Highlights    string         `json:"highlights,omitempty" gorm:"type:text"` // JSON array
-	Status        string         `json:"status" gorm:"size:20;default:'draft'"` // draft, published, archived
+	Status        string         `json:"status" gorm:"size:20;default:'DESIGN'"` // DESIGN, PUBLISHED, ARCHIVED
 	SortOrder     int            `json:"sort_order" gorm:"default:0"`
 	CreatedAt     time.Time      `json:"created"`
 	UpdatedAt     time.Time      `json:"updated"`
@@ -239,7 +254,7 @@ type Post struct {
 	Autor        *User          `json:"autor,omitempty" gorm:"foreignKey:AutorID"`
 	Kategorie    string         `json:"kategorie,omitempty" gorm:"size:100"`
 	Tags         string         `json:"tags,omitempty" gorm:"type:text"` // JSON array
-	Status       string         `json:"status" gorm:"size:20;default:'draft'"` // draft, published, archived
+	Status       string         `json:"status" gorm:"size:20;default:'DESIGN'"` // DESIGN, PUBLISHED, ARCHIVED
 	PublishedAt  *time.Time     `json:"published_at,omitempty"`
 	ViewCount    int            `json:"view_count" gorm:"default:0"`
 	CreatedAt    time.Time      `json:"created"`

@@ -27,6 +27,7 @@ func main() {
 	// Run migrations
 	if err := database.Migrate(
 		&models.User{},
+		&models.PasswordReset{},
 		&models.Ziel{},
 		&models.Kategorie{},
 		&models.Bild{},
@@ -86,7 +87,14 @@ func setupRoutes(app *fiber.App, cfg *config.Config) {
 	auth := v1.Group("/auth")
 	auth.Post("/register", authLimiter, handlers.Register)
 	auth.Post("/login", authLimiter, handlers.Login)
+	auth.Post("/forgot-password", authLimiter, handlers.ForgotPassword)
+	auth.Post("/reset-password", authLimiter, handlers.ResetPassword)
 	auth.Get("/me", middleware.AuthMiddleware(database.DB, cfg), handlers.GetMe)
+
+	// User profile (auth required)
+	user := v1.Group("/user", middleware.AuthMiddleware(database.DB, cfg))
+	user.Put("/profile", handlers.UpdateProfile)
+	user.Put("/password", handlers.ChangePassword)
 
 	// Ziel endpoints (public read)
 	ziele := v1.Group("/ziele")
