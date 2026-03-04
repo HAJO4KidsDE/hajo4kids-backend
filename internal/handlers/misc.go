@@ -91,7 +91,7 @@ func GetVermarkterByID(c *fiber.Ctx) error {
 func GetFavoriten(c *fiber.Ctx) error {
 	user := middleware.GetUserFromContext(c)
 	var favoriten []models.Favorit
-	database.DB.Preload("Ziel").Where("user_id = ?", user.ID).Find(&favoriten)
+	database.DB.Preload("Ziel.Bilder").Preload("Ziel.Kategorien").Where("user_id = ?", user.ID).Find(&favoriten)
 	return response.Success(c, favoriten)
 }
 
