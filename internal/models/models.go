@@ -79,14 +79,16 @@ type Ziel struct {
 
 // Kategorie represents a category
 type Kategorie struct {
-	ID          uint           `json:"id" gorm:"primaryKey"`
-	Name        string         `json:"name" gorm:"size:255;not null"`
-	Beschreibung string        `json:"beschreibung,omitempty" gorm:"type:text"`
-	Bild        string         `json:"bild,omitempty" gorm:"size:500"` // Fallback image for ziele without images
-	SortOrder   int            `json:"sort_order" gorm:"default:0"`
-	CreatedAt   time.Time      `json:"created"`
-	UpdatedAt   time.Time      `json:"updated"`
-	DeletedAt   gorm.DeletedAt `json:"-" gorm:"index"`
+	ID           uint           `json:"id" gorm:"primaryKey"`
+	Name         string         `json:"name" gorm:"size:255;not null"`
+	Beschreibung string         `json:"beschreibung,omitempty" gorm:"type:text"`
+	BildID       *uint          `json:"bild_id,omitempty" gorm:"index"`
+	BildData     *Bild          `json:"bild_data,omitempty" gorm:"foreignKey:BildID"`
+	Bild         string         `json:"bild,omitempty" gorm:"size:500"` // Fallback image URL for ziele without images
+	SortOrder    int            `json:"sort_order" gorm:"default:0"`
+	CreatedAt    time.Time      `json:"created"`
+	UpdatedAt    time.Time      `json:"updated"`
+	DeletedAt    gorm.DeletedAt `json:"-" gorm:"index"`
 }
 
 // Bild represents an image

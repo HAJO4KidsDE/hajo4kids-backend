@@ -29,7 +29,7 @@ func canEditTrip(user *models.User, trip models.Trip) bool {
 // Kategorien
 func GetKategorien(c *fiber.Ctx) error {
 	var kategorien []models.Kategorie
-	if err := database.DB.Order("sort_order, name").Find(&kategorien).Error; err != nil {
+	if err := database.DB.Preload("BildData").Order("sort_order, name").Find(&kategorien).Error; err != nil {
 		return response.InternalError(c, "Failed to fetch kategorien")
 	}
 	return response.Success(c, kategorien)
@@ -38,7 +38,7 @@ func GetKategorien(c *fiber.Ctx) error {
 func GetKategorie(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var kategorie models.Kategorie
-	if err := database.DB.First(&kategorie, id).Error; err != nil {
+	if err := database.DB.Preload("BildData").First(&kategorie, id).Error; err != nil {
 		return response.NotFound(c, "Kategorie not found")
 	}
 	return response.Success(c, kategorie)
