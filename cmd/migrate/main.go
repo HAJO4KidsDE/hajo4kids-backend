@@ -181,10 +181,14 @@ type NewUser struct {
 
 func (NewUser) TableName() string { return "users" }
 
+// BildLookup maps old bild IDs to paths
+var bildLookup = make(map[uint]string)
+
 type NewKategorie struct {
 	ID           uint      `gorm:"primaryKey"`
 	Name         string    `gorm:"size:255;not null"`
 	Beschreibung string    `gorm:"type:text"`
+	Bild         string    `gorm:"size:500"`
 	SortOrder    int       `gorm:"default:0"`
 	CreatedAt    time.Time `gorm:"column:created"`
 	UpdatedAt    time.Time `gorm:"column:updated"`
@@ -242,6 +246,8 @@ type NewBild struct {
 	Path         string    `gorm:"size:500"`
 	Thumbnail    string    `gorm:"size:500"`
 	Alt          string    `gorm:"size:255"`
+	Autor        string    `gorm:"size:255"`
+	Beschreibung string    `gorm:"type:text"`
 	IsPrimary    bool      `gorm:"default:false"`
 	CreatedAt    time.Time `gorm:"column:created"`
 	UpdatedAt    time.Time `gorm:"column:updated"`
@@ -400,7 +406,41 @@ func main() {
 		}
 	}
 
-	// 2. Migrate Kategorien
+	// 2. Migrate Bilder FIRST (needed for Kategorie bild lookup)
+	log.Println("\n🖼️  Migrating Bilder...")
+	var oldBilder []OldBild
+	if err := oldDB.Find(&oldBilder).Error; err != nil {
+		log.Printf("❌ Error fetching bilder: %v", err)
+	} else {
+		log.Printf("   Found %d bilder", len(oldBilder))
+		for _, b := range oldBilder {
+			// Build path - construct from ID
+			bildPath := fmt.Sprintf("2016/10/%d.jpg", b.ID)
+			bildLookup[b.ID] = bildPath
+			
+			if *dryRun {
+				continue
+			}
+			newBild := NewBild{
+				ID:           b.ID,
+				Filename:     b.Name,
+				OriginalName: b.Name,
+				Alt:          b.Beschreibung,
+				Autor:        b.Autor,
+				Beschreibung: b.Beschreibung,
+				Path:         bildPath,
+				CreatedAt:    parseTime(b.Created),
+				UpdatedAt:    parseTime(b.Updated),
+			}
+			if err := newDB.Create(&newBild).Error; err != nil {
+				if !strings.Contains(err.Error(), "Duplicate entry") {
+					log.Printf("   ❌ Error creating bild %d: %v", b.ID, err)
+				}
+			}
+		}
+	}
+
+	// 3. Migrate Kategorien (after Bilder, so bildLookup is populated)
 	log.Println("\n📁 Migrating Kategorien...")
 	var oldKategorien []OldKategorie
 	if err := oldDB.Find(&oldKategorien).Error; err != nil {
@@ -411,10 +451,18 @@ func main() {
 			if *dryRun {
 				continue
 			}
+			// Convert bild ID to path if set
+			var bildPath string
+			if k.Bild != nil && *k.Bild > 0 {
+				if path, ok := bildLookup[*k.Bild]; ok {
+					bildPath = path
+				}
+			}
 			newKat := NewKategorie{
 				ID: k.ID,
 				Name: k.Name,
 				Beschreibung: k.Beschreibung,
+				Bild: bildPath,
 				SortOrder: 0,
 				CreatedAt: parseTime(k.Created),
 				UpdatedAt: parseTime(k.Updated),
@@ -424,35 +472,7 @@ func main() {
 					log.Printf("   ❌ Error creating kategorie %s: %v", k.Name, err)
 				}
 			} else {
-				log.Printf("   ✅ Created kategorie: %s (ID: %d)", k.Name, k.ID)
-			}
-		}
-	}
-
-	// 3. Migrate Bilder
-	log.Println("\n🖼️  Migrating Bilder...")
-	var oldBilder []OldBild
-	if err := oldDB.Find(&oldBilder).Error; err != nil {
-		log.Printf("❌ Error fetching bilder: %v", err)
-	} else {
-		log.Printf("   Found %d bilder", len(oldBilder))
-		for _, b := range oldBilder {
-			if *dryRun {
-				continue
-			}
-			newBild := NewBild{
-				ID: b.ID,
-				Filename: b.Name,
-				OriginalName: b.Name,
-				Alt: b.Beschreibung,
-				Path: fmt.Sprintf("/uploads/bilder/%d.jpg", b.ID),
-				CreatedAt: parseTime(b.Created),
-				UpdatedAt: parseTime(b.Updated),
-			}
-			if err := newDB.Create(&newBild).Error; err != nil {
-				if !strings.Contains(err.Error(), "Duplicate entry") {
-					log.Printf("   ❌ Error creating bild %d: %v", b.ID, err)
-				}
+				log.Printf("   ✅ Created kategorie: %s (ID: %d, Bild: %s)", k.Name, k.ID, bildPath)
 			}
 		}
 	}
