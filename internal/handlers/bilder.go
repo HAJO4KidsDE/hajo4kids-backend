@@ -112,10 +112,19 @@ func ServeBild(c *fiber.Ctx) error {
 		return response.NotFound(c, "Image file not found")
 	}
 
+	// Get upload directory from config
+	uploadDir := os.Getenv("UPLOAD_DIR")
+	if uploadDir == "" {
+		uploadDir = "./uploads"
+	}
+
+	// Build full path
+	fullPath := filepath.Join(uploadDir, bild.Path)
+
 	// Set content type and send file
 	c.Set("Content-Type", bild.MimeType)
 	c.Set("Cache-Control", "public, max-age=31536000") // 1 year cache
-	return c.SendFile(bild.Path)
+	return c.SendFile(fullPath)
 }
 
 // ServeBildThumbnail serves a thumbnail of the image
@@ -129,9 +138,15 @@ func ServeBildThumbnail(c *fiber.Ctx) error {
 		return response.NotFound(c, "Image not found")
 	}
 
+	// Get upload directory from config
+	uploadDir := os.Getenv("UPLOAD_DIR")
+	if uploadDir == "" {
+		uploadDir = "./uploads"
+	}
+
 	// Check if thumbnail exists
 	if bild.Thumbnail != "" {
-		thumbPath := bild.Thumbnail
+		thumbPath := filepath.Join(uploadDir, bild.Thumbnail)
 		if _, err := os.Stat(thumbPath); err == nil {
 			c.Set("Content-Type", "image/webp")
 			c.Set("Cache-Control", "public, max-age=31536000")
