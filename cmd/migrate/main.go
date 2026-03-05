@@ -38,7 +38,7 @@ type OldZiel struct {
 	UpdatedBy     string `gorm:"column:updatedby"`
 }
 
-func (OldZiel) TableName() string { return "ziele" }
+func (OldZiel) TableName() string { return "ziele_old" }
 
 type OldKategorie struct {
 	ID              uint   `gorm:"primaryKey"`
@@ -55,7 +55,7 @@ type OldKategorie struct {
 	UpdatedBy       string `gorm:"column:updatedby"`
 }
 
-func (OldKategorie) TableName() string { return "kategorien" }
+func (OldKategorie) TableName() string { return "kategorien_old" }
 
 type OldBild struct {
 	ID          uint   `gorm:"primaryKey"`
@@ -70,7 +70,7 @@ type OldBild struct {
 	UpdatedBy   string `gorm:"column:updatedby"`
 }
 
-func (OldBild) TableName() string { return "bilder" }
+func (OldBild) TableName() string { return "bilder_old" }
 
 type OldUser struct {
 	Username string `gorm:"primaryKey"`
@@ -81,7 +81,7 @@ type OldUser struct {
 	Picture  *uint
 }
 
-func (OldUser) TableName() string { return "users" }
+func (OldUser) TableName() string { return "users_old" }
 
 type OldFavorit struct {
 	ID       uint `gorm:"primaryKey;autoIncrement"`
@@ -89,7 +89,7 @@ type OldFavorit struct {
 	Ziel     uint
 }
 
-func (OldFavorit) TableName() string { return "favoriten" }
+func (OldFavorit) TableName() string { return "favoriten_old" }
 
 type OldRating struct {
 	ID       uint   `gorm:"primaryKey;autoIncrement"`
@@ -100,7 +100,7 @@ type OldRating struct {
 	Created  string
 }
 
-func (OldRating) TableName() string { return "rating" }
+func (OldRating) TableName() string { return "rating_old" }
 
 type OldMarketer struct {
 	ID           uint   `gorm:"primaryKey"`
@@ -114,7 +114,7 @@ type OldMarketer struct {
 	Telefon      string
 }
 
-func (OldMarketer) TableName() string { return "marketers" }
+func (OldMarketer) TableName() string { return "marketers_old" }
 
 type OldEvent struct {
 	ID           uint   `gorm:"primaryKey"`
@@ -130,7 +130,7 @@ type OldEvent struct {
 	Activated    bool
 }
 
-func (OldEvent) TableName() string { return "events" }
+func (OldEvent) TableName() string { return "events_old" }
 
 type OldTrip struct {
 	ID          uint   `gorm:"primaryKey"`
@@ -142,28 +142,28 @@ type OldTrip struct {
 	State       string
 }
 
-func (OldTrip) TableName() string { return "trip" }
+func (OldTrip) TableName() string { return "trip_old" }
 
 type OldZielKategorie struct {
 	ZielID      uint `gorm:"column:ziel_id"`
 	KategorieID uint `gorm:"column:kategorie_id"`
 }
 
-func (OldZielKategorie) TableName() string { return "ziele_kategorien" }
+func (OldZielKategorie) TableName() string { return "ziele_kategorien_old" }
 
 type OldZielBild struct {
 	ZielID uint `gorm:"column:ziel_id"`
 	BildID uint `gorm:"column:bild_id"`
 }
 
-func (OldZielBild) TableName() string { return "ziele_bilder" }
+func (OldZielBild) TableName() string { return "ziele_bilder_old" }
 
 type OldZielTrip struct {
 	TripID uint `gorm:"column:trip_id"`
 	ZielID uint `gorm:"column:ziel_id"`
 }
 
-func (OldZielTrip) TableName() string { return "ziele_trip" }
+func (OldZielTrip) TableName() string { return "ziele_trip_old" }
 
 // NewDB models (for import)
 type NewUser struct {

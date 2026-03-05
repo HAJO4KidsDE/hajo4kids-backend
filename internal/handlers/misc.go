@@ -91,7 +91,7 @@ func GetVermarkterByID(c *fiber.Ctx) error {
 func GetFavoriten(c *fiber.Ctx) error {
 	user := middleware.GetUserFromContext(c)
 	var favoriten []models.Favorit
-	database.DB.Preload("Ziel.Bilder").Preload("Ziel.Kategorien").Where("user_id = ?", user.ID).Find(&favoriten)
+	database.DB.Preload("Ziel.Bilder").Preload("Ziel.Kategorien.BildData").Where("user_id = ?", user.ID).Find(&favoriten)
 	return response.Success(c, favoriten)
 }
 
@@ -533,7 +533,7 @@ func SearchZiele(c *fiber.Ctx) error {
 	
 	// Get results with relations
 	var ziele []models.Ziel
-	query = query.Preload("Kategorien").Preload("Bilder")
+	query = query.Preload("Kategorien.BildData").Preload("Bilder")
 	
 	// Check favorites for logged-in user
 	user := middleware.GetUserFromContext(c)

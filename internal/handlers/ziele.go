@@ -45,7 +45,7 @@ func GetZiele(c *fiber.Ctx) error {
 	usrLat, _ := strconv.ParseFloat(c.Query("usr_lat"), 64)
 	usrLng, _ := strconv.ParseFloat(c.Query("usr_lng"), 64)
 
-	query := database.DB.Model(&models.Ziel{}).Preload("Kategorien").Preload("Bilder")
+	query := database.DB.Model(&models.Ziel{}).Preload("Kategorien.BildData").Preload("Bilder")
 
 	// Status filter (default: published)
 	if status != "" {
@@ -129,7 +129,7 @@ func GetZiel(c *fiber.Ctx) error {
 	// Try to parse as numeric ID first
 	if zielID, err := strconv.ParseUint(id, 10, 32); err == nil {
 		// It's a numeric ID
-		if err := database.DB.Preload("Kategorien").Preload("Bilder").Preload("Ratings").
+		if err := database.DB.Preload("Kategorien.BildData").Preload("Bilder").Preload("Ratings").
 			Preload("Veranstaltungen").
 			Preload("Marketer").
 			First(&ziel, zielID).Error; err != nil {
@@ -138,7 +138,7 @@ func GetZiel(c *fiber.Ctx) error {
 	} else {
 		// Not numeric, try as slugname
 		if err := database.DB.Where("slugname = ?", id).
-			Preload("Kategorien").Preload("Bilder").Preload("Ratings").
+			Preload("Kategorien.BildData").Preload("Bilder").Preload("Ratings").
 			Preload("Veranstaltungen").
 			Preload("Marketer").
 			First(&ziel).Error; err != nil {
@@ -162,7 +162,7 @@ func GetZielByPlaceID(c *fiber.Ctx) error {
 
 	var ziel models.Ziel
 	if err := database.DB.Where("placeid = ?", placeID).
-		Preload("Kategorien").Preload("Bilder").First(&ziel).Error; err != nil {
+		Preload("Kategorien.BildData").Preload("Bilder").First(&ziel).Error; err != nil {
 		return response.NotFound(c, "Ziel not found")
 	}
 
@@ -363,7 +363,7 @@ func UpdateZiel(c *fiber.Ctx) error {
 	}
 
 	// Reload with associations
-	database.DB.Preload("Kategorien").Preload("Bilder").First(&ziel, id)
+	database.DB.Preload("Kategorien.BildData").Preload("Bilder").First(&ziel, id)
 	return response.Success(c, ziel)
 }
 
@@ -514,7 +514,7 @@ func logSearchQuery(c *fiber.Ctx, filter, city, kategorie string, lat, lng float
 // Helper to load Ziel with all associations
 func loadZielWithAssociations(db *gorm.DB, id interface{}) (*models.Ziel, error) {
 	var ziel models.Ziel
-	err := db.Preload("Kategorien").
+	err := db.Preload("Kategorien.BildData").
 		Preload("Bilder").
 		Preload("Ratings").
 		Preload("Veranstaltungen").
