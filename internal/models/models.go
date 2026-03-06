@@ -127,6 +127,7 @@ type Favorit struct {
 	ID        uint      `json:"id" gorm:"primaryKey"`
 	UserID    uint      `json:"user_id" gorm:"not null;uniqueIndex:idx_user_ziel"`
 	ZielID    uint      `json:"ziel_id" gorm:"not null;uniqueIndex:idx_user_ziel"`
+	Ziel      *Ziel     `json:"ziel,omitempty" gorm:"foreignKey:ZielID"`
 	CreatedAt time.Time `json:"created"`
 }
 
