@@ -57,10 +57,27 @@ func GetZiele(c *fiber.Ctx) error {
 		query = query.Where("stadt LIKE ?", "%"+stadt+"%")
 	}
 	
-	// Category filter
+	// Category filter (supports both ID and name)
 	if kategorie != "" {
-		query = query.Joins("JOIN ziel_kategorien ON ziel_kategorien.ziel_id = ziele.id").
-			Where("ziel_kategorien.kategorie_id = ?", kategorie)
+		// Try to find category by name first
+		var katID uint
+		if id, err := strconv.ParseUint(kategorie, 10, 32); err == nil {
+			// It's a numeric ID
+			katID = uint(id)
+		} else {
+			// It's a name, look it up
+			var kat models.Kategorie
+			if err := database.DB.Where("name = ?", kategorie).First(&kat).Error; err == nil {
+				katID = kat.ID
+			}
+		}
+		if katID > 0 {
+			query = query.Joins("JOIN ziel_kategorien ON ziel_kategorien.ziel_id = ziele.id").
+				Where("ziel_kategorien.kategorie_id = ?", katID)
+		} else {
+			// Category not found, return empty result
+			query = query.Where("1 = 0")
+		}
 	}
 	
 	// Text search
